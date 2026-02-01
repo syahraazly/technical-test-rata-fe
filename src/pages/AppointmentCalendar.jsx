@@ -2,13 +2,15 @@ import { useQuery } from "@apollo/client/react";
 import { GET_APPOINTMENTS } from "../graphql/appointmentQueries";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-const monthDays = Array.from({ length: 30 }, (_, i) => i + 1); // mock 30 hari
+const monthDays = Array.from({ length: 30 }, (_, i) => i + 1);
 
 export default function AppointmentCalendar() {
+  const navigate = useNavigate();
   const { data, loading } = useQuery(GET_APPOINTMENTS);
-  const [viewMode, setViewMode] = useState("week"); // week | month
+  const [viewMode, setViewMode] = useState("week");
 
   if (loading) {
     return (
@@ -27,27 +29,47 @@ export default function AppointmentCalendar() {
       <div className="max-w-6xl mx-auto px-4 py-6 animate-fade-up">
 
         {/* HEADER */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                Appointment Calendar
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {viewMode === "week"
-                  ? "Weekly schedule overview"
-                  : "Monthly schedule overview"}
-              </p>
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            
+            {/* BACK + TITLE */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="
+                  w-9 h-9 flex items-center justify-center
+                  rounded-lg border border-gray-300
+                  text-gray-600
+                  transition-all
+                  hover:bg-gray-100 hover:text-gray-900
+                  active:scale-95
+                "
+                title="Back"
+              >
+                ←
+              </button>
+
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  Appointment Calendar
+                </h1>
+                <p className="text-sm text-gray-500">
+                  {viewMode === "week"
+                    ? "Weekly schedule overview"
+                    : "Monthly schedule overview"}
+                </p>
+              </div>
             </div>
 
-            {/* VIEW TOGGLE */}
-            <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+            {/* TOGGLE */}
+            <div className="flex rounded-lg border border-gray-300 overflow-hidden w-full sm:w-auto">
               {["week", "month"].map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
                   className={`
-                    px-4 py-2 text-sm font-medium transition-all
+                    flex-1 sm:flex-none px-4 py-2 text-sm font-medium
+                    transition-all
                     ${
                       viewMode === mode
                         ? "bg-red-600 text-white"
@@ -62,7 +84,7 @@ export default function AppointmentCalendar() {
           </div>
         </div>
 
-        {/* CALENDAR VIEW */}
+        {/* VIEW */}
         {viewMode === "week" ? (
           <WeeklyCalendar appointments={appointments} />
         ) : (
@@ -76,44 +98,40 @@ export default function AppointmentCalendar() {
 // WEEKLY VIEW
 function WeeklyCalendar({ appointments }) {
   return (
-    <div className="overflow-x-auto">
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 min-w-[700px]">
-        {weekDays.map((day, i) => {
-          const dayAppointments = appointments.filter((a) =>
-            isSameWeekDay(a.date, day)
-          );
+    <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-5 sm:gap-4">
+      {weekDays.map((day, i) => {
+        const dayAppointments = appointments.filter((a) =>
+          isSameWeekDay(a.date, day)
+        );
 
-          return (
-            <div
-              key={day}
-              style={{ animationDelay: `${i * 60}ms` }}
-              className="
-                bg-white border border-gray-200 rounded-xl p-4
-                animate-fade-up
-                transition-all duration-300
-                hover:shadow-md
-              "
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold text-gray-900">{day}</h2>
-                <span className="text-xs text-gray-400">
-                  {dayAppointments.length} appt
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                {dayAppointments.map((a) => (
-                  <AppointmentCard key={a.id} a={a} />
-                ))}
-
-                {dayAppointments.length === 0 && (
-                  <EmptyDay />
-                )}
-              </div>
+        return (
+          <div
+            key={day}
+            style={{ animationDelay: `${i * 60}ms` }}
+            className="
+              bg-white border border-gray-200 rounded-xl p-4
+              animate-fade-up
+              transition-all
+              hover:shadow-md
+            "
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-gray-900">{day}</h2>
+              <span className="text-xs text-gray-400">
+                {dayAppointments.length} appt
+              </span>
             </div>
-          );
-        })}
-      </div>
+
+            <div className="space-y-2">
+              {dayAppointments.map((a) => (
+                <AppointmentCard key={a.id} a={a} />
+              ))}
+
+              {dayAppointments.length === 0 && <EmptyDay />}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -121,7 +139,7 @@ function WeeklyCalendar({ appointments }) {
 // MONTHLY VIEW
 function MonthlyCalendar({ appointments }) {
   return (
-    <div className="grid grid-cols-7 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
       {monthDays.map((day) => {
         const dayAppointments = appointments.filter(
           (a) => getDayOfMonth(a.date) === day
@@ -132,7 +150,7 @@ function MonthlyCalendar({ appointments }) {
             key={day}
             className="
               bg-white border border-gray-200 rounded-lg p-3
-              min-h-[120px]
+              min-h-[100px]
               transition-all
               hover:shadow-md hover:border-red-300
             "
@@ -164,7 +182,7 @@ function AppointmentCard({ a, compact }) {
       to={`/patients/${a.patientId}`}
       className={`
         block rounded-lg border
-        ${compact ? "px-2 py-1" : "p-2"}
+        ${compact ? "px-2 py-1" : "p-3"}
         bg-red-50 border-red-200
         transition-all
         hover:bg-red-100 hover:border-red-300
